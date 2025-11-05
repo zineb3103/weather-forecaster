@@ -1,7 +1,6 @@
 import os
 import json
-import time
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from kafka import KafkaProducer
@@ -27,39 +26,24 @@ def fetch_payload() -> Optional[dict]:
 
 
 def main() -> None:
-    print("[producer] Streaming mode ON... (1 msg/sec)")
-    producer = build_producer()
+    print("[producer] Starting...")
+    payload = fetch_payload()
+    if not payload:
+        print("[producer] No data fetched; exiting")
+        return
+
     topic = TOPICS['raw']
+    key = f"weather:{payload['metadata']['location']}:{datetime.utcnow().isoformat()}"
 
-    try:
-        while True:
-            payload = fetch_payload()
-            if not payload:
-                print("[producer] No data fetched; skipping")
-                time.sleep(1)
-                continue
-
-            timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-            key = f"weather:{payload['metadata']['location']}:{timestamp}"
-
-            future = producer.send(topic, key=key, value=payload)
-            record_md = future.get(timeout=10)
-            producer.flush()
-
-            print(
-                f"[producer] {timestamp} → "
-                f"partition={record_md.partition} offset={record_md.offset}"
-            )
-            print(f"Key: {key}")
-            print(f"Payload: {json.dumps(payload, indent=2)}\n")
-
-            time.sleep(1)  # ⬅️ Stream every second
-
-    except KeyboardInterrupt:
-        print("\n⛔ Streaming stopped by user")
-    finally:
-        producer.close()
+    producer = build_producer()
+    # Pass key as str; serializer handles encoding
+    future = producer.send(topic, key=key, value=payload)
+    record_md = future.get(timeout=10)
+    producer.flush()
+    print(f"[producer] Published to {topic} partition={record_md.partition} offset={record_md.offset}")
 
 
 if __name__ == "__main__":
     main()
+
+
