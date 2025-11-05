@@ -1,0 +1,15 @@
+# API et requêtes HTTP
+requests
+aiohttp
+
+# Kafka pour ingestion / production
+kafka-python
+
+# Sérialisation et traitement léger
+pandas
+
+# Gestion des variables d'environnement
+python-dotenv
+
+# Tests unitaires
+pytest
