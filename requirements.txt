@@ -13,3 +13,7 @@ python-dotenv
 
 # Tests unitaires
 pytest
+
+scikit-learn
+xgboost
+joblib
